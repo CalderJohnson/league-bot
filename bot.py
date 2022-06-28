@@ -10,7 +10,7 @@ import messages
 TOKEN = "token"
 PREFIX = "t!"
 INTENTS = discord.Intents.all()
-MAX_ROSTER_SIZE = 15
+MAX_ROSTER_SIZE = 13
 
 BOT = Bot(command_prefix=PREFIX, intents=INTENTS)
 BOT.remove_command("help")
@@ -27,6 +27,66 @@ async def on_ready():
         global pending_recruitments
         pending_recruitments = {team: [] for team in teamslist["teams"]}
     print("Bot online")
+
+#moderation commands
+
+@BOT.command(pass_context=True)
+@commands.has_permissions(kick_members=True)
+async def kick(ctx, user : discord.Member):
+    """Kicks a member"""
+    if user is None:
+        await ctx.channel.send("Please input a user")
+    else:
+        try:
+            await ctx.guild.kick(user)
+        except discord.errors.Forbidden:
+            await messages.error(ctx, "Can't kick that user")
+            return
+        await messages.success(ctx, f"Kicked **{user.name}**")
+
+@BOT.command(pass_context=True)
+@commands.has_permissions(ban_members=True)
+async def ban(ctx, user : discord.Member):
+    """Bans a member"""
+    if user is None:
+        await ctx.channel.send("Please input a user")
+    else:
+        try:
+            await ctx.guild.ban(user)
+        except discord.errors.Forbidden:
+            await messages.error(ctx, "Can't ban that user")
+            return
+        await messages.success(ctx, f"Banned **{user.name}**")
+
+@BOT.command(pass_context=True)
+@commands.has_permissions(manage_roles=True)
+async def mute(ctx, user : discord.Member):
+    """Mutes a member"""
+    if user is None:
+        await messages.error(ctx, "Please input a user")
+    else:
+        try:
+            muterole = discord.utils.get(ctx.guild.roles, name="Muted")
+            await user.add_roles(muterole)
+        except discord.errors.Forbidden:
+            await messages.error(ctx, "Can't mute that user")
+            return
+        await messages.success(ctx, f"Muted **{user.name}**")
+
+@BOT.command(pass_context=True)
+@commands.has_permissions(manage_roles=True)
+async def unmute(ctx, user : discord.Member):
+    """Unmutes a member"""
+    if user is None:
+        await messages.error(ctx, "Please input a user")
+    else:
+        try:
+            muterole = discord.utils.get(ctx.guild.roles, name="Muted")
+            await user.remove_roles(muterole)
+        except discord.errors.Forbidden:
+            await messages.error(ctx, "Can't unmute that user")
+            return
+        await messages.success(ctx, f"Unmuted **{user.name}**")
 
 #staff only commands
 
@@ -123,14 +183,14 @@ async def recruit(ctx, user):
                     return
                 pending_recruitments[str(role)] = []
                 pending_recruitments[str(role)].append(int(user[2:-1]))
-                await ctx.channel.send(f"{user} type t!confirm if you wish to join the team, and t!reject if you do not")
+                await ctx.send(f"{user} type t!confirm if you wish to join the team, and t!reject if you do not")
                 await messages.info(ctx, "Recruitment pending")
                 return
     await messages.error(ctx, "Something went wrong")
 
 @BOT.command(pass_context=True)
 @commands.has_any_role("Team Leader", "Team Co-Leader")
-async def kick(ctx, user):
+async def boot(ctx, user):
     """Remove a player from your team"""
     user_object = ctx.guild.get_member(int(user[2:-1]))
     if not user_object:
@@ -174,7 +234,18 @@ async def tag(ctx, clantag):
 @BOT.command(pass_context=True)
 async def help(ctx):
     """List all commands available"""
-    await ctx.channel.send(embed=messages.help_message)
+    await ctx.send(embed=messages.help_message)
+
+@BOT.command(pass_context=True)
+async def ping(ctx):
+    await ctx.send('Pong! {0}'.format(round(BOT.latency, 1)))
+
+@BOT.command(pass_context=True)
+async def info(ctx, user: discord.Member=None):
+    if user is None:
+        await messages.error(ctx, "Input a user")
+    else:
+        await messages.info(ctx, f"The user's name is: {user.name}\nThe user's ID is: {user.id}\nThe user's current status is: {user.status}\nThe user's highest role is: {user.top_role}\nThe user joined at: {user.joined_at}")
 
 @BOT.command(pass_context=True)
 async def list(ctx, team):
