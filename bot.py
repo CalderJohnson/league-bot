@@ -245,7 +245,7 @@ async def info(ctx, user: discord.Member=None):
     if user is None:
         await messages.error(ctx, "Input a user")
     else:
-        await messages.info(ctx, f"The user's name is: {user.name}\nThe user's ID is: {user.id}\nThe user's current status is: {user.status}\nThe user's highest role is: {user.top_role}\nThe user joined at: {user.joined_at}")
+        await messages.info(ctx, f"The user's name is: {user.name}\nThe user's ID is: {user.id}\nThe user's current status is: {user.status}\nThe user's highest role is: {user.top_role}\nThe user joined at: {user.joined_at}\nThe user was created at: {user.created_at}")
 
 @BOT.command(pass_context=True)
 async def list(ctx, team):
