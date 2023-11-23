@@ -1,0 +1,1 @@
+A discord bot I put together a few years ago to manage team organization in an FPS gaming league I administrated. 
